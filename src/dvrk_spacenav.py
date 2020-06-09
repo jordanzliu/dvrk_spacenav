@@ -8,22 +8,23 @@ import PyKDL
 psm = None
 arm_wrench_spatial_pub = None
 
-def spacenav_twist_callback(msg):
-    linear = msg.linear
-    angular = msg.angular
-    trans = PyKDL.Vector(linear.x, linear.y, linear.z)
-    rot = PyKDL.Rotation.RPY(angular.x, angular.y, angular.z)
+
+def spacenav_joy_callback(msg):
+    trans = PyKDL.Vector(- msg.axes[1], msg.axes[0], msg.axes[2]) * 0.1
+    rot = PyKDL.Rotation.RPY(msg.axes[0], msg.axes[1], msg.axes[2])
     delta_frame = PyKDL.Frame(rot, trans)
     psm.dmove(delta_frame, blocking=False)
 
-def spacenav_joy_callback(msg):
-    # we only use the joy msg to get the button press for opening the jaw
-    pass
+    if msg.buttons[1]:
+        rospy.loginfo('Opening jaw')
+        psm.open_jaw(blocking=False)
+    elif msg.buttons[0]:
+        rospy.loginfo('Closing jaw')
+        psm.close_jaw(blocking=False)
 
 if __name__ == '__main__':
     rospy.init_node('dvrk_spacenav')
     psm_name = rospy.get_param('spacenav_arm_name', default='PSM1')
     psm = dvrk.psm(psm_name)
-    spacenav_twist_sub = rospy.Subscriber('/spacenav/twist', Twist, spacenav_twist_callback)
-    spacenav_joy_sub = rospy.Subscriber('/spacejav/joy', Joy, spacenav_joy_callback)
+    spacenav_joy_sub = rospy.Subscriber('/spacenav/joy', Joy, spacenav_joy_callback)
     rospy.spin()
