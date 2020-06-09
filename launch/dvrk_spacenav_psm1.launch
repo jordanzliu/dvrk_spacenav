@@ -1,0 +1,10 @@
+<launch>
+    <arg name="arm" default="PSM1"/>   
+    <arg name="config" 
+        default="$(find saw_intuitive_research_kit)/../share/console-PSM1_KIN_SIMULATED.json"/>  
+    <include file="$(find dvrk_robot)/launch/dvrk_arm_rviz.launch" pass_all_args="true" />
+    <include file="$(find spacenav_node)/launch/classic.launch"/>
+    <node name="dvrk_spacenav_node" pkg="dvrk_spacenav" type="dvrk_spacenav.py" />
+</launch>
+
+
