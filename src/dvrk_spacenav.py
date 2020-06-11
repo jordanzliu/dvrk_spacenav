@@ -5,6 +5,7 @@ import rospy
 import dvrk
 import PyKDL
 import Tkinter
+import numpy as np
 
 current_arm = None
 arm_wrench_spatial_pub = None
@@ -27,19 +28,31 @@ def set_ecm_callback():
 
 def spacenav_joy_callback(msg):
     global current_arm
-    trans = PyKDL.Vector(- msg.axes[1], msg.axes[0], msg.axes[2]) * 0.1
-    rot = PyKDL.Rotation.RPY(msg.axes[0], msg.axes[1], msg.axes[2])
-    delta_frame = PyKDL.Frame(rot, trans)
-
     if current_arm is not None:
-        current_arm.dmove(delta_frame, blocking=False)
         if isinstance(current_arm, dvrk.psm):
+            # psm mappings
+            trans = PyKDL.Vector(- msg.axes[1], msg.axes[0], msg.axes[2]) * 0.05
+            rot = PyKDL.Rotation.RPY(msg.axes[0], msg.axes[1], msg.axes[2])
+            delta_frame = PyKDL.Frame(rot, trans)
+
+            current_arm.dmove(delta_frame, blocking=False)
+
             if msg.buttons[1]:
                 rospy.loginfo('Opening jaw')
                 current_arm.open_jaw(blocking=False)
             elif msg.buttons[0]:
                 rospy.loginfo('Closing jaw')
                 current_arm.close_jaw(blocking=False)
+        else:
+            # ecm mappings
+            setup_joint_delta = - msg.axes[3] * 0.05
+            pitch_joint_delta = - msg.axes[4] * 0.05
+            roll_joint_delta = - msg.axes[5] * 0.05
+            insertion_joint_delta = - msg.axes[2] * 0.05
+            current_arm.dmove_joint(np.array([setup_joint_delta, pitch_joint_delta,
+                                    insertion_joint_delta, roll_joint_delta]),
+                                    blocking=False)
+
 
 
 if __name__ == '__main__':
