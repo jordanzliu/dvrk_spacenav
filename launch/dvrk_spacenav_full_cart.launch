@@ -1,0 +1,8 @@
+<launch> 
+    <include file="$(find dvrk_spacenav)/launch/dvrk_full_cart_simulated.launch" 
+             pass_all_args="true" />
+    <include file="$(find spacenav_node)/launch/classic.launch"/>
+    <node name="dvrk_spacenav_node" pkg="dvrk_spacenav" type="dvrk_spacenav.py" />
+</launch>
+
+
